@@ -39,6 +39,17 @@ public class GroupAndSlice
 	
 	
 	//Methods
+	/**
+	 * Top level entry method for grouping a number of files together into one set, then slicing that set into
+	 * n slices to be used for n-fold cross validation by machine learning programs.  This variant uses a
+	 * preset location relative to the source directory for predict and train files.
+	 * @param sourceDirectoryName String pathname of the location with the source SVM files
+	 * @param groupType type of grouping for result files (smallToLarge, smallAndLarge, Random by size)
+	 * @param groupSize size of grouping to create each grouping set
+	 * @param titleDigits number of digits to be used to represent source files in the group files
+	 * @param crossValidationNumber number of slices to use in cross validation
+	 * @throws IOException thrown if a file does not exists or lacks permissions in called methods
+	 */
 	public static void groupAndSlicePrep(String sourceDirectoryName,  int groupType, int groupSize, int titleDigits, int crossValidationNumber) throws IOException
 	{
 		List<File> fileList = getFiles(sourceDirectoryName);
@@ -92,11 +103,21 @@ public class GroupAndSlice
 				Collections.shuffle(fileList);
 			}
 		}
-	
 		
 		processFiles(fileList, destinationDirectory, groupSize, titleDigits, crossValidationNumber);
 	}
 
+	/**
+	 * Top level entry method for grouping a number of files together into one set, then slicing that set into
+	 * n slices to be used for n-fold cross validation by machine learning programs.  This variant requires 
+	 * the destination directory to be explicity provided.
+	 * @param sourceDirectoryName String pathname of the location with the source SVM files
+	 * @param groupType type of grouping for result files (smallToLarge, smallAndLarge, Random by size)
+	 * @param groupSize size of grouping to create each grouping set
+	 * @param titleDigits number of digits to be used to represent source files in the group files
+	 * @param crossValidationNumber number of slices to use in cross validation
+	 * @throws IOException thrown if a file does not exists or lacks permissions in called methods
+	 */
 	public static void groupAndSlicePrep(String sourceDirectoryName, String destinationDirectoryName, int groupType,  int groupSize, int titleDigits, int crossValidationNumber) throws IOException
 	{
 		File destinationDirectory 	= new File(destinationDirectoryName + PATH_DELIM + groupSize);
@@ -127,6 +148,14 @@ public class GroupAndSlice
 		processFiles(fileList, destinationDirectory, groupSize, titleDigits, crossValidationNumber);
 	}
 
+	/**
+	 * @param fileList list of files in source directory
+	 * @param destinationDirectory directory to be parent for prediction and training directories
+	 * @param groupSize size of grouping to create each grouping set
+	 * @param zeroes number of digits to be used to represent source files in the group files
+	 * @param crossValidationNumber number of slices to use in cross validation
+	 * @throws IOException thrown if a file does not exists or lacks permissions in called methods
+	 */
 	public static void processFiles(List<File> fileList, File destinationDirectory, int groupSize, int zeroes,  int crossValidationNumber) throws IOException
 	{
 		Iterator<File> iterator = fileList.iterator();
@@ -190,6 +219,16 @@ public class GroupAndSlice
 		}
 	}
 
+	/**
+	 * Create N files, round robin style from original libSVM sparse formatted file
+	 * @param fileList list of files in source directory
+	 * @param outputFilename base filename of prediction file.  Actual filename will have digit 
+	 * as extension to outputfilename
+	 * @param destinationDirectory directory to be parent for prediction and training directories
+	 * @param crossValidationNumber number of slices to use in cross validation
+	 * @throws FileNotFoundException thrown if one of the files in fileList is not found
+	 * @throws IOException thrown if a file does not exists or lacks permissions in called methods
+	 */
 	public static void makePredictionFiles(List<File> fileList, String outputFilename, File destinationDirectory, int crossValidationNumber) throws FileNotFoundException, IOException
 	{
 		Iterator<File> fileIterator = fileList.iterator();
@@ -262,7 +301,13 @@ public class GroupAndSlice
 		}
 	}
 	
-
+	/**
+	 * consolidates n-1 prediction files into a single training file named the same as the -1 prediction file
+	 * @param fileList list of files to be consolidated into training files
+	 * @param outputFileName prediction filename being used to name the outputfile (the training file)
+	 * @param destinationDirectory parent directory for training files
+	 * @throws IOException thrown if a file does not exists or lacks permissions in called methods
+	 */
 	public static void makeTrainingFiles(List<File> fileList, String outputFileName, File destinationDirectory) throws IOException
 	{
 		
@@ -389,6 +434,17 @@ public class GroupAndSlice
 		return result;
 	}
 	
+	/**
+	 * takes a single line from each file in the file list and adds it to a file in the revolving list of destination files.
+	 * This is done to spread lines of source files as evenly as possible throughout the destination files
+	 * 
+	 * @param fileList list of source files to be round robin distributed
+	 * @param outputFilename the basename for the destination files.  Each destination file is appended with a digit
+	 * representing which "slice" of the original file that file holds.
+	 * @param destinationDirectory the parent directory of the destination files
+	 * @param crossValidationNumber the number of slices to be made from the source files
+	 * @throws IOException thrown if a file does not exists or lacks permissions in called methods
+	 */
 	public static void roundRobinFiles(List<File> fileList, String outputFilename, File destinationDirectory, int crossValidationNumber) throws IOException
 	{
 		if (crossValidationNumber < MIN_SLICES)
@@ -409,6 +465,15 @@ public class GroupAndSlice
 		makeTrainingFiles(predictFileList, outputFilename, destinationDirectory);
 	}
 	
+	
+	/**
+	 * Concatenates the files in the fileList into a single file in the destination directory
+	 * @param fileList list of files to be concatenated
+	 * @param outputFileName basename of the outputted file after concatenation
+	 * @param destinationDirectory parent directory to store concatenated files
+	 * @throws FileNotFoundException thrown if one of the files in fileList is not found
+	 * @throws IOException thrown if a file does not exists or lacks permissions in called methods
+	 */
 	public static void catFiles(List<File> fileList, String outputFileName, File destinationDirectory) throws FileNotFoundException, IOException
 	{
 		Iterator<File> iterator = fileList.iterator();
