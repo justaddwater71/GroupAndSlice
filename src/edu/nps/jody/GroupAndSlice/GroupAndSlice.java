@@ -52,61 +52,60 @@ public class GroupAndSlice
 	 */
 	public static void groupAndSlicePrep(String sourceDirectoryName,  int groupType, int groupSize, int titleDigits, int crossValidationNumber) throws IOException
 	{
-		List<File> fileList = getFiles(sourceDirectoryName);
+		File sourceDirectory = new File(sourceDirectoryName);
 		
-		String destinationDirectoryName = null;
+		groupAndSlicePrep(sourceDirectory, groupType, groupSize, titleDigits, crossValidationNumber);
+	}
+
+	/**
+	 * Top level entry method for grouping a number of files together into one set, then slicing that set into
+	 * n slices to be used for n-fold cross validation by machine learning programs.  This variant uses a
+	 * preset location relative to the source directory for predict and train files.
+	 * @param sourceDirectoryName String pathname of the location with the source SVM files
+	 * @param groupType type of grouping for result files (smallToLarge, smallAndLarge, Random by size)
+	 * @param groupSize size of grouping to create each grouping set
+	 * @param titleDigits number of digits to be used to represent source files in the group files
+	 * @param crossValidationNumber number of slices to use in cross validation
+	 * @throws IOException thrown if a file does not exists or lacks permissions in called methods
+	 */
+	public static void groupAndSlicePrep(File sourceDirectory,  int groupType, int groupSize, int titleDigits, int crossValidationNumber) throws IOException
+	{
+		List<File> fileList = getFiles(sourceDirectory);
+		
+		File destinationDirectory = null;
 		
 		//TODO seems like an enum could make this much more straightforward, but it seems like the same work, just in a different file
 		switch (groupType)
 			{
 			case(GROUP_SMALL_TO_LARGE):
 			{
-				destinationDirectoryName = sourceDirectoryName + PATH_DELIM + GROUP_SMALL_TO_LARGE_NAME + PATH_DELIM + groupSize;
+				destinationDirectory = new File(sourceDirectory, GROUP_SMALL_TO_LARGE_NAME + PATH_DELIM + groupSize);
+				//destinationDirectoryName = sourceDirectoryName + PATH_DELIM + GROUP_SMALL_TO_LARGE_NAME + PATH_DELIM + groupSize;
 				break;
 			}
 			case(GROUP_SMALL_AND_LARGE):
 			{
-				destinationDirectoryName = sourceDirectoryName + PATH_DELIM + GROUP_SMALL_AND_LARGE_NAME + PATH_DELIM + groupSize;
+				destinationDirectory = new File(sourceDirectory, GROUP_SMALL_AND_LARGE_NAME + PATH_DELIM + groupSize);
+				//destinationDirectoryName = sourceDirectoryName + PATH_DELIM + GROUP_SMALL_AND_LARGE_NAME + PATH_DELIM + groupSize;
 				break;
 			}
 			case(GROUP_RANDOM_SIZE):
 			{
-				destinationDirectoryName = sourceDirectoryName + PATH_DELIM + GROUP_RANDOM_SIZE + PATH_DELIM + groupSize;
+				destinationDirectory = new File(sourceDirectory, GROUP_RANDOM_SIZE + PATH_DELIM + groupSize);
+				//destinationDirectoryName = sourceDirectoryName + PATH_DELIM + GROUP_RANDOM_SIZE + PATH_DELIM + groupSize;
 				break;
 			}
 			default:
 			{
+				//FIXME Make this an exception instead of a print
 				System.out.println("Invalid group type selection.");
 				return;
 			}
 		}
 		
-		File destinationDirectory 	= new File(destinationDirectoryName);
-		
-		if( !destinationDirectory.isDirectory())
-		{
-			destinationDirectory.mkdirs();
-		}
-		
-		switch (groupType)
-		{
-			case GROUP_SMALL_TO_LARGE:
-			{
-				sortBySize(fileList);
-			}
-			case GROUP_SMALL_AND_LARGE:
-			{
-				fileList = smallAndLargeProcess(fileList, groupSize);
-			}
-			case GROUP_RANDOM_SIZE:
-			{
-				Collections.shuffle(fileList);
-			}
-		}
-		
-		processFiles(fileList, destinationDirectory, groupSize, titleDigits, crossValidationNumber);
+		groupAndSlicePrep(destinationDirectory, sourceDirectory, groupType, groupSize, titleDigits, crossValidationNumber);
 	}
-
+	
 	/**
 	 * Top level entry method for grouping a number of files together into one set, then slicing that set into
 	 * n slices to be used for n-fold cross validation by machine learning programs.  This variant requires 
@@ -120,9 +119,28 @@ public class GroupAndSlice
 	 */
 	public static void groupAndSlicePrep(String sourceDirectoryName, String destinationDirectoryName, int groupType,  int groupSize, int titleDigits, int crossValidationNumber) throws IOException
 	{
-		File destinationDirectory 	= new File(destinationDirectoryName + PATH_DELIM + groupSize);
+		File sourceDirectory = new File(sourceDirectoryName);
+		File destinationDirectory = new File(destinationDirectoryName);
 		
-		List<File> fileList = getFiles(sourceDirectoryName);
+		groupAndSlicePrep(sourceDirectory, destinationDirectory, groupType, groupSize, titleDigits, crossValidationNumber);
+	}
+
+	/**
+	 * Top level entry method for grouping a number of files together into one set, then slicing that set into
+	 * n slices to be used for n-fold cross validation by machine learning programs.  This variant requires 
+	 * the destination directory to be explicity provided.
+	 * @param sourceDirectoryName String pathname of the location with the source SVM files
+	 * @param groupType type of grouping for result files (smallToLarge, smallAndLarge, Random by size)
+	 * @param groupSize size of grouping to create each grouping set
+	 * @param titleDigits number of digits to be used to represent source files in the group files
+	 * @param crossValidationNumber number of slices to use in cross validation
+	 * @throws IOException thrown if a file does not exists or lacks permissions in called methods
+	 */
+	public static void groupAndSlicePrep(File sourceDirectory, File destinationDirectory, int groupType,  int groupSize, int titleDigits, int crossValidationNumber) throws IOException
+	{
+		destinationDirectory 	= new File(destinationDirectory, Integer.toString(groupSize));
+		
+		List<File> fileList = getFiles(sourceDirectory);
 		
 		if( !destinationDirectory.isDirectory())
 		{
@@ -147,7 +165,7 @@ public class GroupAndSlice
 		
 		processFiles(fileList, destinationDirectory, groupSize, titleDigits, crossValidationNumber);
 	}
-
+	
 	/**
 	 * @param fileList list of files in source directory
 	 * @param destinationDirectory directory to be parent for prediction and training directories
@@ -362,6 +380,22 @@ public class GroupAndSlice
 	public static List<File> getFiles(String directoryName)
 	{
 		File directory = new File(directoryName);
+		
+		return getFiles(directory);
+	}
+	
+	/**
+	 * Given a String path to a directory, returns a List of the files in that directory.  If a filename
+	 * is provided instead of a directory, then a list with one element, the file provided, is returned.
+	 * Checking for existence or validity of files is conducted.  Once the list is built, all directories 
+	 * in that list a removed.  This method is NOT recursive.
+	 * 
+	 * @param directoryName String name of the directory containing source files to group and cat/slice
+	 * @return List of all files int directoryName.  If directory name was a file instead of a directory, 
+	 * the list contains one element, the file designated by directoryName.
+	 */
+	public static List<File> getFiles(File directory)
+	{
 		File[] fileArray;
 		List<File> fileVector = new Vector<File>();
 		Iterator<File> iterator;
@@ -557,7 +591,4 @@ public class GroupAndSlice
 		
 		//smallToLargeProcess(sourceDirectory, groupSize, titleDigits, destinationDirectory, crossValidationNumber);
 	}
-
-	
-
 }
