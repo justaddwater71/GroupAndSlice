@@ -27,13 +27,13 @@ public class GroupAndSlice
 	public static final String 	TRAIN_FOLDER		= "train";
 	public static final int		MIN_SLICES 			= 2;
 	
-	public static final int		GROUP_SMALL_TO_LARGE		= 0;
+	/*public static final int		GROUP_SMALL_TO_LARGE		= 0;
 	public static final int		GROUP_SMALL_AND_LARGE 	= 1;
 	public static final int		GROUP_RANDOM_SIZE				= 2;
 	
 	public static final String		GROUP_SMALL_TO_LARGE_NAME		= "aaaSmallToLarge";
 	public static final String		GROUP_SMALL_AND_LARGE_NAME 	= "aaaSmallAndLarge";
-	public static final String		GROUP_RANDOM_SIZE_NAME				= "aaaRandom";
+	public static final String		GROUP_RANDOM_SIZE_NAME				= "aaaRandom";*/
 	
 	//Constructors
 	
@@ -50,7 +50,7 @@ public class GroupAndSlice
 	 * @param crossValidationNumber number of slices to use in cross validation
 	 * @throws IOException thrown if a file does not exists or lacks permissions in called methods
 	 */
-	public static void groupAndSlicePrep(String sourceDirectoryName,  int groupType, int groupSize, int titleDigits, int crossValidationNumber) throws IOException
+	public static void groupAndSlicePrep(String sourceDirectoryName,  GroupTypes groupType, int groupSize, int titleDigits, int crossValidationNumber) throws IOException
 	{
 		File sourceDirectory = new File(sourceDirectoryName);
 		
@@ -68,31 +68,26 @@ public class GroupAndSlice
 	 * @param crossValidationNumber number of slices to use in cross validation
 	 * @throws IOException thrown if a file does not exists or lacks permissions in called methods
 	 */
-	public static void groupAndSlicePrep(File sourceDirectory,  int groupType, int groupSize, int titleDigits, int crossValidationNumber) throws IOException
+	public static void groupAndSlicePrep(File sourceDirectory,  GroupTypes groupType, int groupSize, int titleDigits, int crossValidationNumber) throws IOException
 	{
-		List<File> fileList = getFiles(sourceDirectory);
-		
 		File destinationDirectory = null;
 		
 		//TODO seems like an enum could make this much more straightforward, but it seems like the same work, just in a different file
 		switch (groupType)
 			{
-			case(GROUP_SMALL_TO_LARGE):
+			case GROUP_SMALL_TO_LARGE:
 			{
-				destinationDirectory = new File(sourceDirectory, GROUP_SMALL_TO_LARGE_NAME + PATH_DELIM + groupSize);
-				//destinationDirectoryName = sourceDirectoryName + PATH_DELIM + GROUP_SMALL_TO_LARGE_NAME + PATH_DELIM + groupSize;
+				destinationDirectory = new File(sourceDirectory, groupType.dirName() + PATH_DELIM + groupSize);
 				break;
 			}
-			case(GROUP_SMALL_AND_LARGE):
+			case GROUP_SMALL_AND_LARGE:
 			{
-				destinationDirectory = new File(sourceDirectory, GROUP_SMALL_AND_LARGE_NAME + PATH_DELIM + groupSize);
-				//destinationDirectoryName = sourceDirectoryName + PATH_DELIM + GROUP_SMALL_AND_LARGE_NAME + PATH_DELIM + groupSize;
+				destinationDirectory = new File(sourceDirectory, groupType.dirName() + PATH_DELIM + groupSize);
 				break;
 			}
-			case(GROUP_RANDOM_SIZE):
+			case GROUP_RANDOM_SIZE:
 			{
-				destinationDirectory = new File(sourceDirectory, GROUP_RANDOM_SIZE + PATH_DELIM + groupSize);
-				//destinationDirectoryName = sourceDirectoryName + PATH_DELIM + GROUP_RANDOM_SIZE + PATH_DELIM + groupSize;
+				destinationDirectory = new File(sourceDirectory, groupType.dirName() + PATH_DELIM + groupSize);
 				break;
 			}
 			default:
@@ -117,7 +112,7 @@ public class GroupAndSlice
 	 * @param crossValidationNumber number of slices to use in cross validation
 	 * @throws IOException thrown if a file does not exists or lacks permissions in called methods
 	 */
-	public static void groupAndSlicePrep(String sourceDirectoryName, String destinationDirectoryName, int groupType,  int groupSize, int titleDigits, int crossValidationNumber) throws IOException
+	public static void groupAndSlicePrep(String sourceDirectoryName, String destinationDirectoryName, GroupTypes groupType,  int groupSize, int titleDigits, int crossValidationNumber) throws IOException
 	{
 		File sourceDirectory = new File(sourceDirectoryName);
 		File destinationDirectory = new File(destinationDirectoryName);
@@ -136,7 +131,7 @@ public class GroupAndSlice
 	 * @param crossValidationNumber number of slices to use in cross validation
 	 * @throws IOException thrown if a file does not exists or lacks permissions in called methods
 	 */
-	public static void groupAndSlicePrep(File sourceDirectory, File destinationDirectory, int groupType,  int groupSize, int titleDigits, int crossValidationNumber) throws IOException
+	public static void groupAndSlicePrep(File sourceDirectory, File destinationDirectory, GroupTypes groupType,  int groupSize, int titleDigits, int crossValidationNumber) throws IOException
 	{
 		destinationDirectory 	= new File(destinationDirectory, Integer.toString(groupSize));
 		

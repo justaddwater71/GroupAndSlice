@@ -9,9 +9,9 @@ package edu.nps.jody.GroupAndSlice;
  */
 public enum GroupTypes 
 {
-	GROUP_SMALL_TO_LARGE_NAME		("aaaSmallToLarge"),
-	GROUP_SMALL_AND_LARGE_NAME	("aaaSmallAndLarge"),
-	GROUP_RANDOM_SIZE_NAME				( "aaaRandom");
+	GROUP_SMALL_TO_LARGE		("aaaSmallToLarge"),
+	GROUP_SMALL_AND_LARGE	("aaaSmallAndLarge"),
+	GROUP_RANDOM_SIZE				( "aaaRandom");
 	
 	private String dirName;
 	
@@ -20,7 +20,8 @@ public enum GroupTypes
 		this.dirName = dirName;
 	}
 	
-	private String dirName()
+	//If the enums names get too unwieldy, shorter or more convenient Strings can be had here by overriding toString
+	public String dirName()
 	{
 		return dirName;
 	}
