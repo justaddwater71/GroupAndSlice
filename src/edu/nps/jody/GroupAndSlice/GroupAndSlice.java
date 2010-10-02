@@ -22,18 +22,10 @@ import java.util.Iterator;
 public class GroupAndSlice 
 {
 	//Data Members
-	public static final String 	PATH_DELIM 			= System.getProperty("path.separator");
+	public static final String 	FILE_DELIM 			= System.getProperty("file.separator");
 	public static final String 	PREDICT_FOLDER 	= "predict";
 	public static final String 	TRAIN_FOLDER		= "train";
 	public static final int		MIN_SLICES 			= 2;
-	
-	/*public static final int		GROUP_SMALL_TO_LARGE		= 0;
-	public static final int		GROUP_SMALL_AND_LARGE 	= 1;
-	public static final int		GROUP_RANDOM_SIZE				= 2;
-	
-	public static final String		GROUP_SMALL_TO_LARGE_NAME		= "aaaSmallToLarge";
-	public static final String		GROUP_SMALL_AND_LARGE_NAME 	= "aaaSmallAndLarge";
-	public static final String		GROUP_RANDOM_SIZE_NAME				= "aaaRandom";*/
 	
 	//Constructors
 	
@@ -77,17 +69,17 @@ public class GroupAndSlice
 			{
 			case GROUP_SMALL_TO_LARGE:
 			{
-				destinationDirectory = new File(sourceDirectory, groupType.dirName() + PATH_DELIM + groupSize);
+				destinationDirectory = new File(sourceDirectory, groupType.dirName() + FILE_DELIM + groupSize);
 				break;
 			}
 			case GROUP_SMALL_AND_LARGE:
 			{
-				destinationDirectory = new File(sourceDirectory, groupType.dirName() + PATH_DELIM + groupSize);
+				destinationDirectory = new File(sourceDirectory, groupType.dirName() + FILE_DELIM + groupSize);
 				break;
 			}
 			case GROUP_RANDOM_SIZE:
 			{
-				destinationDirectory = new File(sourceDirectory, groupType.dirName() + PATH_DELIM + groupSize);
+				destinationDirectory = new File(sourceDirectory, groupType.dirName() + FILE_DELIM + groupSize);
 				break;
 			}
 			default:
@@ -98,7 +90,7 @@ public class GroupAndSlice
 			}
 		}
 		
-		groupAndSlicePrep(destinationDirectory, sourceDirectory, groupType, groupSize, titleDigits, crossValidationNumber);
+		groupAndSlicePrep(sourceDirectory, destinationDirectory, groupType, groupSize, titleDigits, crossValidationNumber);
 	}
 	
 	/**
@@ -133,7 +125,7 @@ public class GroupAndSlice
 	 */
 	public static void groupAndSlicePrep(File sourceDirectory, File destinationDirectory, GroupTypes groupType,  int groupSize, int titleDigits, int crossValidationNumber) throws IOException
 	{
-		destinationDirectory 	= new File(destinationDirectory, Integer.toString(groupSize));
+		destinationDirectory 	= new File(destinationDirectory, Integer.toString(crossValidationNumber));
 		
 		List<File> fileList = getFiles(sourceDirectory);
 		
@@ -147,14 +139,17 @@ public class GroupAndSlice
 			case GROUP_SMALL_TO_LARGE:
 			{
 				sortBySize(fileList);
+				break;
 			}
 			case GROUP_SMALL_AND_LARGE:
 			{
 				fileList = smallAndLargeProcess(fileList, groupSize);
+				break;
 			}
 			case GROUP_RANDOM_SIZE:
 			{
 				Collections.shuffle(fileList);
+				break;
 			}
 		}
 		
@@ -174,6 +169,7 @@ public class GroupAndSlice
 		Iterator<File> iterator = fileList.iterator();
 		List<File> printList = new Vector<File>();
 		String outputFileName;
+		String baseFileName;
 		
 		int count = 0;
 		
@@ -184,9 +180,11 @@ public class GroupAndSlice
 			{
 				if (count != 0 && count%groupSize == 0)
 				{
-					outputFileName = intToStringWithLeadingZeroes(count - groupSize, zeroes) + 
-						"_" + 
-							intToStringWithLeadingZeroes(count  - 1, zeroes);
+					baseFileName = intToStringWithLeadingZeroes(count - groupSize, zeroes);
+					
+					//QsubManager.writeScript(baseFileName, groupSize, crossValidationNumber);
+					
+					outputFileName = baseFileName +	"_" + intToStringWithLeadingZeroes(count  - 1, zeroes);
 					
 					roundRobinFiles(printList, outputFileName, destinationDirectory, crossValidationNumber);
 					printList.clear();
@@ -269,13 +267,13 @@ public class GroupAndSlice
 		{
 			try //make the required destination directory if not already present 
 			{
-			sliceFile = new File(destinationDirectory, PREDICT_FOLDER + PATH_DELIM + crossValidationNumber + PATH_DELIM+ outputFilename + "." + i);
+			sliceFile = new File(destinationDirectory, PREDICT_FOLDER + FILE_DELIM+ outputFilename + "." + i);
 			sliceFile.createNewFile();
 			}
 			catch(IOException e)
 			{
-				new File(destinationDirectory + PATH_DELIM + PREDICT_FOLDER + PATH_DELIM + crossValidationNumber).mkdirs();
-				sliceFile = new File(destinationDirectory, PREDICT_FOLDER + PATH_DELIM + crossValidationNumber + PATH_DELIM+ outputFilename + "." + i);
+				new File(destinationDirectory + FILE_DELIM + PREDICT_FOLDER).mkdirs();
+				sliceFile = new File(destinationDirectory, PREDICT_FOLDER + FILE_DELIM+ outputFilename + "." + i);
 				sliceFile.createNewFile();
 			}
 			
@@ -332,7 +330,7 @@ public class GroupAndSlice
 		File outputFile;
 		PrintWriter printWriter;
 		String currentLine;
-		int listSize = fileList.size();
+		//int listSize = fileList.size();
 		
 		//do-while first element != compare variable
 		do {
@@ -342,8 +340,17 @@ public class GroupAndSlice
 			//Assign iterator
 			fileListIterator = fileList.iterator();
 			
-			new File(destinationDirectory, TRAIN_FOLDER + PATH_DELIM + listSize).mkdirs();
-			outputFile = new File(destinationDirectory, TRAIN_FOLDER + PATH_DELIM + listSize + PATH_DELIM + outputFileName + "." + holdOutFile.getName().split("\\.")[1]);
+			//new File(destinationDirectory, TRAIN_FOLDER).mkdirs(); 
+			outputFile = new File(destinationDirectory, TRAIN_FOLDER + FILE_DELIM + outputFileName + "." + holdOutFile.getName().split("\\.")[1]);
+			try
+			{
+				outputFile.createNewFile();
+			}
+			catch(IOException i)
+			{
+				outputFile.getParentFile().mkdirs();
+				outputFile.createNewFile();
+			}
 			printWriter = new PrintWriter(outputFile);
 			while (fileListIterator.hasNext())
 			{
@@ -393,8 +400,8 @@ public class GroupAndSlice
 	{
 		File[] fileArray;
 		List<File> fileVector = new Vector<File>();
-		Iterator<File> iterator;
-		File file;
+		/*Iterator<File> iterator;
+		File file;*/
 		
 		//If a filename was provided
 		if (!directory.isDirectory())
@@ -410,10 +417,13 @@ public class GroupAndSlice
 		// Load the list with all the elements from the array
 		for (int i=0; i < fileArray.length; i++)
 		{
-			fileVector.add(fileArray[i]);
+			if (!fileArray[i].isDirectory())
+			{
+				fileVector.add(fileArray[i]);
+			}
 		}
 		
-		iterator = fileVector.iterator();
+		/*iterator = fileVector.iterator();
 		
 		while (iterator.hasNext())
 		{
@@ -424,7 +434,7 @@ public class GroupAndSlice
 			{
 				iterator.remove();
 			}
-		}
+		}*/
 		
 		return fileVector;
 	}
@@ -489,7 +499,7 @@ public class GroupAndSlice
 		
 		List<File> predictFileList = new Vector<File>();
 		
-		Collections.addAll(predictFileList, new File(destinationDirectory, PREDICT_FOLDER + PATH_DELIM + crossValidationNumber).listFiles(fileNameFilter));
+		Collections.addAll(predictFileList, new File(destinationDirectory, PREDICT_FOLDER).listFiles(fileNameFilter));
 		
 		makeTrainingFiles(predictFileList, outputFilename, destinationDirectory);
 	}
