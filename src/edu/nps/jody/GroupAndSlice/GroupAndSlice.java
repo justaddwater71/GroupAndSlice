@@ -69,17 +69,17 @@ public class GroupAndSlice
 			{
 			case GROUP_SMALL_TO_LARGE:
 			{
-				destinationDirectory = new File(sourceDirectory, groupType.dirName() + FILE_DELIM + groupSize);
+				destinationDirectory = new File(sourceDirectory, groupType.toString() + FILE_DELIM + groupSize);
 				break;
 			}
 			case GROUP_SMALL_AND_LARGE:
 			{
-				destinationDirectory = new File(sourceDirectory, groupType.dirName() + FILE_DELIM + groupSize);
+				destinationDirectory = new File(sourceDirectory, groupType.toString() + FILE_DELIM + groupSize);
 				break;
 			}
 			case GROUP_RANDOM_SIZE:
 			{
-				destinationDirectory = new File(sourceDirectory, groupType.dirName() + FILE_DELIM + groupSize);
+				destinationDirectory = new File(sourceDirectory, groupType.toString() + FILE_DELIM + groupSize);
 				break;
 			}
 			default:
@@ -588,12 +588,42 @@ public class GroupAndSlice
 	
 	public static void main(String[] args) throws IOException 
 	{
-		/*String sourceDirectory = "/thesis/corpora/enron/0/smallSVMFiles";
-		String destinationDirectory = "/thesis/corpora/enron/0/smallSVMFiles/aaaSmallToLarge";
-		int groupSize = 5;
-		int titleDigits = 3;
-		int crossValidationNumber = 5;*/
+		String sourceDirectory	= System.getProperty("user.dir");
+		GroupTypes groupType	= GroupTypes.valueOf("GROUP_SMALL_TO_LARGE");
+		int groupSize 					= 5;
+		int titleDigits 					= 3;
+		int crossValNumber 		= 5;
 		
-		//smallToLargeProcess(sourceDirectory, groupSize, titleDigits, destinationDirectory, crossValidationNumber);
+		
+		for (int i=0; i < args.length; i++)
+		{
+			if (args[i].equalsIgnoreCase("--sourceDirectory"))
+			{
+				sourceDirectory = args[i + 1];
+				i++;
+			}
+			else if(args[i].equalsIgnoreCase("--groupType"))
+			{
+				groupType = GroupTypes.valueOf(args[i + 1]);
+				i++;
+			}
+			else if(args[i].equalsIgnoreCase("--groupSize"))
+			{
+				groupSize = Integer.parseInt(args[i + 1]);
+				i++;
+			}
+			else if(args[i].equalsIgnoreCase("--titleDigits"))
+			{
+				titleDigits = Integer.parseInt(args[i + 1]);
+				i++;
+			}
+			else if(args[i].equalsIgnoreCase("--crossVal"))
+			{
+				crossValNumber = Integer.parseInt(args[i + 1]);
+				i++;
+			}
+		}
+		groupAndSlicePrep(sourceDirectory, groupType, groupSize, titleDigits, crossValNumber);
+		
 	}
 }
